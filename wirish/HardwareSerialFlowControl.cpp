@@ -105,9 +105,8 @@ void HardwareSerialFlowControl::begin(uint32 baud) {
     
     usart_init(this->usart_device);
     // enable rts/cts flow control in registers
-    // something like this but specific to the USART_#N (use a macro?)
-    // usart_dev *usart3 = this->c_dev();
-    // usart3->regs->CR3 |= USART_CR3_RTSE_BIT |USART_CR3_CTSE_BIT;
+    // should this be in usart.c for libmaple? does this apply to USART1,2..
+    this->usart_device->regs->CR3 |= USART_CR3_RTSE_BIT |USART_CR3_CTSE_BIT;
     
     usart_set_baud_rate(this->usart_device, USART_USE_PCLK, baud);
     usart_enable(this->usart_device);
