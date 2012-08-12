@@ -102,14 +102,28 @@ void HardwareSerialFlowControl::begin(uint32 baud) {
                              ctsi->gpio_device, ctsi->gpio_bit,
                              rtsi->gpio_device, rtsi->gpio_bit,
                              0);
-    
-    usart_init(this->usart_device);
+    usart_init(this->usart_device);    
+    usart_enable(this->usart_device);
     // enable rts/cts flow control in registers
     // should this be in usart.c for libmaple? does this apply to USART1,2..
-    this->usart_device->regs->CR3 |= USART_CR3_RTSE_BIT |USART_CR3_CTSE_BIT;
-    
+
+    // The stm peripheral example uses a temporary register (tmpreg) with a clear
+    // mask and the following defines:
+    // from stm peripheral library examples:
+    // #define CR3_CLEAR_Mask            ((uint16)0xFCFF)  /*!< USART CR3 Mask */
+    // #define USART_HardwareFlowControl_RTS_CTS    ((uint16)0x0300)
+    // uint16 tmpreg = 0x00;
+    // tmpreg = this->usart_device->regs->CR3;
+    // tmpreg &= CR3_CLEAR_Mask;
+    // tmpreg |= USART_HardwareFlowControl_RTS_CTS;
+    // USART_HardwareFlowControl_RTS_CTS should be equivalent to 
+    // tmpreg |= (USART_CR3_RTSE |USART_CR3_CTSE ); 
+    // this->usart_device->regs->CR3 = tmpreg;
+    this->usart_device->regs->CR3 = (USART_CR3_RTSE |USART_CR3_CTSE );
+
     usart_set_baud_rate(this->usart_device, USART_USE_PCLK, baud);
-    usart_enable(this->usart_device);
+
+
 }
 
 void HardwareSerialFlowControl::end(void) {
