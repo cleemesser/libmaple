@@ -45,10 +45,22 @@
 #define BOARD_NR_USARTS         5
 #define BOARD_USART1_TX_PIN     24
 #define BOARD_USART1_RX_PIN     25
+#define BOARD_USART1_CK_PIN     23
+//#define BOARD_USART1_CTS_PIN      /*NOT_A_PIN*/
+//#define BOARD_USART1_RTS_PIN      /*NOT_A_PIN*/
+
 #define BOARD_USART2_TX_PIN     50
 #define BOARD_USART2_RX_PIN     51
+#define BOARD_USART2_CK_PIN     52
+#define BOARD_USART2_CTS_PIN    48
+#define BOARD_USART2_RTS_PIN    49
+
 #define BOARD_USART3_TX_PIN     0
 #define BOARD_USART3_RX_PIN     1
+#define BOARD_USART3_CK_PIN     2
+#define BOARD_USART3_CTS_PIN    3
+#define BOARD_USART3_RTS_PIN    4
+
 #define BOARD_UART4_TX_PIN      17
 #define BOARD_UART4_RX_PIN      18
 #define BOARD_UART5_TX_PIN      19
