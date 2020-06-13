@@ -136,17 +136,16 @@ class CommandInterface(object):
         return self._wait_for_ack(hex(cmd))
 
     def cmdGet(self):
-        if self.cmdGeneric(0x00):
-            mdebug(10, "*** Get command");
-            len = ord(self.sp.read())
-            version = ord(self.sp.read())
-            mdebug(10, "    Bootloader version: "+hex(version))
-            dat = map(lambda c: hex(ord(c)), self.sp.read(len))
-            mdebug(10, "    Available commands: "+str(dat))
-            self._wait_for_ack("0x00 end")
-            return version
-        else:
+        if not self.cmdGeneric(0x00):
             raise CmdException("Get (0x00) failed")
+        mdebug(10, "*** Get command");
+        len = ord(self.sp.read())
+        version = ord(self.sp.read())
+        mdebug(10, "    Bootloader version: "+hex(version))
+        dat = map(lambda c: hex(ord(c)), self.sp.read(len))
+        mdebug(10, "    Available commands: "+str(dat))
+        self._wait_for_ack("0x00 end")
+        return version
 
     def cmdGetVersion(self):
         if self.cmdGeneric(0x01):
@@ -215,7 +214,7 @@ class CommandInterface(object):
             self.sp.write(chr(lng)) # len really
             crc = 0xFF
             for c in data:
-                crc = crc ^ c
+                crc ^= c
                 self.sp.write(chr(c))
             self.sp.write(chr(crc))
             self._wait_for_ack("0x31 programming failed")
@@ -225,24 +224,23 @@ class CommandInterface(object):
 
 
     def cmdEraseMemory(self, sectors = None):
-        if self.cmdGeneric(0x43):
-            mdebug(10, "*** Erase memory command")
-            if sectors is None:
-                # Global erase
-                self.sp.write(chr(0xFF))
-                self.sp.write(chr(0x00))
-            else:
-                # Sectors erase
-                self.sp.write(chr((len(sectors)-1) & 0xFF))
-                crc = 0xFF
-                for c in sectors:
-                    crc = crc ^ c
-                    self.sp.write(chr(c))
-                self.sp.write(chr(crc))
-            self._wait_for_ack("0x43 erasing failed")
-            mdebug(10, "    Erase memory done")
-        else:
+        if not self.cmdGeneric(0x43):
             raise CmdException("Erase memory (0x43) failed")
+        mdebug(10, "*** Erase memory command")
+        if sectors is None:
+            # Global erase
+            self.sp.write(chr(0xFF))
+            self.sp.write(chr(0x00))
+        else:
+            # Sectors erase
+            self.sp.write(chr((len(sectors)-1) & 0xFF))
+            crc = 0xFF
+            for c in sectors:
+                crc ^= c
+                self.sp.write(chr(c))
+            self.sp.write(chr(crc))
+        self._wait_for_ack("0x43 erasing failed")
+        mdebug(10, "    Erase memory done")
 
 
     # TODO support for non-global mass erase
@@ -264,18 +262,17 @@ class CommandInterface(object):
 
 
     def cmdWriteProtect(self, sectors):
-        if self.cmdGeneric(0x63):
-            mdebug(10, "*** Write protect command")
-            self.sp.write(chr((len(sectors)-1) & 0xFF))
-            crc = 0xFF
-            for c in sectors:
-                crc = crc ^ c
-                self.sp.write(chr(c))
-            self.sp.write(chr(crc))
-            self._wait_for_ack("0x63 write protect failed")
-            mdebug(10, "    Write protect done")
-        else:
+        if not self.cmdGeneric(0x63):
             raise CmdException("Write Protect memory (0x63) failed")
+        mdebug(10, "*** Write protect command")
+        self.sp.write(chr((len(sectors)-1) & 0xFF))
+        crc = 0xFF
+        for c in sectors:
+            crc ^= c
+            self.sp.write(chr(c))
+        self.sp.write(chr(crc))
+        self._wait_for_ack("0x63 write protect failed")
+        mdebug(10, "    Write protect done")
 
     def cmdWriteUnprotect(self):
         if self.cmdGeneric(0x73):
@@ -318,7 +315,7 @@ class CommandInterface(object):
                 pbar.update(pbar.maxval-lng)
             else:
                 mdebug(5, "Read %(len)d bytes at 0x%(addr)X" % {'addr': addr, 'len': 256})
-            data = data + self.cmdReadMemory(addr, 256)
+            data += self.cmdReadMemory(addr, 256)
             addr = addr + 256
             lng = lng - 256
         if usepbar:
@@ -326,7 +323,7 @@ class CommandInterface(object):
             pbar.finish()
         else:
             mdebug(5, "Read %(len)d bytes at 0x%(addr)X" % {'addr': addr, 'len': 256})
-        data = data + self.cmdReadMemory(addr, lng)
+        data += self.cmdReadMemory(addr, lng)
         return data
 
     def writeMemory(self, addr, data):
@@ -346,9 +343,9 @@ class CommandInterface(object):
             else:
                 mdebug(5, "Write %(len)d bytes at 0x%(addr)X" % {'addr': addr, 'len': 256})
             self.cmdWriteMemory(addr, data[offs:offs+256])
-            offs = offs + 256
+            offs += 256
             addr = addr + 256
-            lng = lng - 256
+            lng -= 256
         if usepbar:
             pbar.update(pbar.maxval-lng)
             pbar.finish()
